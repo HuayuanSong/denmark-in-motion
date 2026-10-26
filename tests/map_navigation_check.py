@@ -1,5 +1,6 @@
 """Exercise actual mouse/wheel and Chromium touch input, not mocked gestures."""
 import json
+import os
 import math
 from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
@@ -8,7 +9,7 @@ ROOT=Path(__file__).resolve().parents[1]
 OUT=ROOT/'test-results';OUT.mkdir(exist_ok=True)
 areas=json.loads((ROOT/'dist/data/manifest.json').read_text())['areas']
 by_code={a['code']:a for a in areas}
-URL='http://127.0.0.1:4320/'
+URL=os.environ.get('MOTION_TEST_URL','http://127.0.0.1:4320/')
 errors=[]
 def ready(page):page.locator('#loading').wait_for(state='hidden')
 def zoom(page):return float(page.locator('#map').get_attribute('data-zoom'))

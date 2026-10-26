@@ -61,6 +61,30 @@ The builder checks unique source rows, non-negative integer cells, no within-mun
 
 The shipped-snapshot check independently recomputes all 540 filtered networks, arrival/departure summaries, conservation of national flows, community totals and all 99 municipality route histories. Browser checks cover desktop/mobile, every control category, route history, URL restoration, CSV contents, population-rate availability, no-population groups and keyboard tab navigation. The navigation checks exercise real mouse, wheel and multi-touch browser input, including cursor anchoring, pinch-to-pan transitions, cancelled gestures, bounds, keyboard controls and reduced motion. Browser scripts save screenshots under ignored `test-results/`.
 
+## GitHub Pages
+
+- Website: **https://huayuansong.github.io/denmark-in-motion/**
+- Repository: **https://github.com/HuayuanSong/denmark-in-motion**
+
+The public GitHub Pages site serves the `gh-pages` branch. Source code, import scripts and tests live on `main`; the deployment branch contains only the committed `dist/` snapshot. GitHub’s built-in Pages deployment publishes that branch automatically, without a custom Actions workflow, API key or repository secret.
+
+After committing and pushing source changes to `main`, publish the updated website with:
+
+```sh
+python3 scripts/publish_pages.py
+```
+
+The script uses the `github` remote when present, otherwise `origin`; override this with `--remote NAME`. It publishes only committed website files, preserves deployment history, and does not force-push. Statistics are not downloaded during deployment. To publish newer data, run the refresh commands above and commit the new snapshot first.
+
+All app and data URLs are relative, so the site works at the repository subpath. To run browser checks against a different base URL:
+
+```sh
+MOTION_TEST_URL=https://huayuansong.github.io/denmark-in-motion/ python3 tests/browser_check.py
+MOTION_TEST_URL=https://huayuansong.github.io/denmark-in-motion/ python3 tests/map_navigation_check.py
+```
+
+The existing Sites publication remains available separately. GitHub Pages publication does not update that deployment.
+
 ## Architecture and hosting
 
 `dist/` is a portable static site. It can be hosted as static files, including on GitHub Pages or Cloudflare Pages, without an application backend. There is no runtime StatBank dependency and no user account or API key needed by the app itself. Hosting access controls may require sign-in.

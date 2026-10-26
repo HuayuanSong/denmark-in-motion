@@ -2,6 +2,7 @@
 import csv
 import io
 import json
+import os
 from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
 
@@ -10,7 +11,7 @@ OUT=ROOT/'test-results';OUT.mkdir(exist_ok=True)
 manifest=json.loads((ROOT/'dist/data/manifest.json').read_text())
 summary=json.loads((ROOT/'dist/data/summary.json').read_text())
 idx={a['code']:i for i,a in enumerate(manifest['areas'])}
-URL='http://127.0.0.1:4320/'
+URL=os.environ.get('MOTION_TEST_URL','http://127.0.0.1:4320/')
 errors=[]
 def ready(page):page.locator('#loading').wait_for(state='hidden')
 def select(page,key,value):page.locator('#'+key).select_option(str(value));ready(page)
