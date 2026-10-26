@@ -6,7 +6,7 @@ const signed = n => (n > 0 ? '+' : n < 0 ? '−' : '') + fmt(Math.abs(n));
 const decimal = n => (n > 0 ? '+' : n < 0 ? '−' : '') + Math.abs(n).toFixed(1);
 const pct = (part,whole) => whole ? (100*part/whole).toFixed(1)+'%' : '0%';
 const esc = value => String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const palette = ['#539883','#b78b59','#6f8fb3','#b97c87','#8c86ab','#89a454','#c29568','#599f9f','#a28e72','#9f9fb8'];
+const palette = ['#448dbd','#5b9c78','#bc8861','#8b80ab','#9ca556','#4c99a2','#a47e8e','#627ca3','#8b9e91','#b69b70'];
 const state = {area:'751',year:2025,age:0,sex:0,view:'flows',direction:'out',unit:'count'};
 let manifest, history, current, matrix, selected=0, renderId=0, mapNavigation, routeRenderId=0;
 const yearCache = new Map(), routeCache = new Map();
@@ -44,21 +44,21 @@ async function render() {
   selected=manifest.areas.findIndex(a=>a.code===state.area);
   if(state.year<2008&&state.unit==='rate')state.unit='count';
   syncControls();updateHash();$('loading').textContent='Loading '+state.year+'…';$('loading').hidden=false;
-  try { const data=await getYear(state.year);if(id!==renderId)return;current=data;matrix=matrixFor(data.flows,manifest.areas.length,state.age,state.sex);renderMap();renderInsight();renderDetails();$('loading').hidden=true; }
+  try { const data=await getYear(state.year);if(id!==renderId)return;current=data;matrix=matrixFor(data.flows,manifest.areas.length,state.age,state.sex);renderMap();renderInsight();renderDetails();renderKeyFigures();$('loading').hidden=true; }
   catch(error){if(id!==renderId)return;$('loading').innerHTML=`<div><p>This year could not be loaded.</p><button class="primary-btn" id="retry">Try again</button></div>`;$('retry').onclick=render;$('insight').innerHTML='<p>Please retry to load the selected data.</p>';console.error(error);}
 }
 function chooseArea(i) { state.area=manifest.areas[i].code;render(); }
 function mapFill(i,partners,maximum) {
   if(state.view==='flows') {
-    if(i===selected)return '#1e655a';
+    if(i===selected)return '#0074c6';
     const found=partners.find(p=>p.i===i);
-    if(found) return blend('#d5dfd8','#8baea2',Math.sqrt(found.count/maximum));
-    return '#d5dfd8';
+    if(found) return blend('#d4e2e9','#8fbdd8',Math.sqrt(found.count/maximum));
+    return '#d4e2e9';
   }
   if(state.view==='groups')return palette[current.communities[state.sex][state.age].membership[i]%palette.length];
   const value=metric(getSummary()[i]);
   if(value===null)return '#d3d8d5';
-  return blend('#e4e8df',value>=0?'#287e6c':'#bf7256',Math.sqrt(Math.min(1,Math.abs(value)/maximum)));
+  return blend('#e7edf1',value>=0?'#008038':'#b55d45',Math.sqrt(Math.min(1,Math.abs(value)/maximum)));
 }
 function blend(a,b,t){const rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));const x=rgb(a),y=rgb(b);return '#'+x.map((v,i)=>Math.round(v+(y[i]-v)*t).toString(16).padStart(2,'0')).join('');}
 function renderMap() {
@@ -81,13 +81,25 @@ function renderMap() {
   const labels=[selected];
   const candidates=state.view==='flows'?partners.slice(0,8).map(p=>p.i):['751','851','461','561','400'].map(code=>manifest.areas.findIndex(a=>a.code===code));
   for(const i of candidates)if(i>=0&&!labels.includes(i)&&labels.every(j=>Math.hypot(manifest.areas[i].x-manifest.areas[j].x,manifest.areas[i].y-manifest.areas[j].y)>70))labels.push(i);
-  $('points').innerHTML=labels.map(i=>{const a=manifest.areas[i],chosen=i===selected;return `<circle cx="${a.x}" cy="${a.y}" data-radius="${chosen?5:3}" r="${chosen?5:3}" fill="${chosen?'#19343c':'#427c91'}" stroke="#fff" stroke-width="1.6" pointer-events="none"/><text x="${a.x}" y="${a.y-11}" data-anchor-y="${a.y}" text-anchor="middle" class="map-label ${chosen?'selected-label':''}">${esc(name(i))}</text>`;}).join('');
-  if(state.view==='flows')$('legend').innerHTML='<span><i style="background:#1e655a"></i>Selected place</span><span><i style="background:#427c91"></i>Top 8 flows · thicker = more moves</span>';
-  else if(state.view==='balance')$('legend').innerHTML='<span><i style="background:#bf7256"></i>Net loss</span><span><i style="background:#e4e8df"></i>Balanced</span><span><i style="background:#287e6c"></i>Net gain</span>';
+  $('points').innerHTML=labels.map(i=>{const a=manifest.areas[i],chosen=i===selected;return `<circle cx="${a.x}" cy="${a.y}" data-radius="${chosen?5:3}" r="${chosen?5:3}" fill="${chosen?'#002e2e':'#0074c6'}" stroke="#fff" stroke-width="1.6" pointer-events="none"/><text x="${a.x}" y="${a.y-11}" data-anchor-y="${a.y}" text-anchor="middle" class="map-label ${chosen?'selected-label':''}">${esc(name(i))}</text>`;}).join('');
+  if(state.view==='flows')$('legend').innerHTML='<span><i style="background:#0074c6"></i>Selected place</span><span><i style="background:#0074c6"></i>Top 8 flows · thicker = more moves</span>';
+  else if(state.view==='balance')$('legend').innerHTML='<span><i style="background:#b55d45"></i>Net loss</span><span><i style="background:#e7edf1"></i>Balanced</span><span><i style="background:#008038"></i>Net gain</span>';
   else $('legend').innerHTML='<span>Same colour = more closely connected through moves</span>';
   mapNavigation?.refresh();
 }
-function statsMarkup(row) { const net=row[0]-row[1];return `<div class="stats"><div class="stat"><span>ARRIVALS</span><strong>${fmt(row[0])}</strong></div><div class="stat"><span>DEPARTURES</span><strong>${fmt(row[1])}</strong></div><div class="stat net"><span>NET DOMESTIC MOVES</span><strong class="${net>=0?'positive':'negative'}">${signed(net)}</strong></div></div>`; }
+function statsMarkup() { return ''; }
+function renderKeyFigures() {
+  const rows=getSummary(),row=rows[selected];
+  $('figuresScope').textContent=scope();
+  $('nationalMoves').textContent=fmt(rows.reduce((sum,r)=>sum+r[0],0));
+  $('arrivalsLabel').textContent='Arrivals in '+name(selected);
+  $('departuresLabel').textContent='Departures from '+name(selected);
+  $('netLabel').textContent='Net change in '+name(selected);
+  $('keyArrivals').textContent=fmt(row[0]);
+  $('keyDepartures').textContent=fmt(row[1]);
+  $('keyNet').textContent=signed(row[0]-row[1]);
+}
+
 function ranking(rows,kind='route',limit=6) {
   const max=Math.max(...rows.map(r=>Math.abs(r.count)),1);
   return `<ol class="rank-list">${rows.slice(0,limit).map((r,index)=>`<li><button data-${kind}="${r.i}" aria-label="${kind==='route'?'Inspect connection with':'Select'} ${esc(name(r.i))}"><span class="rank">${String(index+1).padStart(2,'0')}</span><span class="rank-name">${esc(name(r.i))}<i class="rank-bar" style="width:${Math.abs(r.count)/max*90}%"></i></span><strong class="${kind==='place'?(r.count>=0?'positive':'negative'):''}">${kind==='place'?(state.unit==='rate'?decimal(r.count):signed(r.count)):fmt(r.count)}</strong></button></li>`).join('')}</ol>`;
@@ -115,7 +127,7 @@ function chartMarkup(values,years,selectedYear=state.year,interactive=true) {
   const compact=n=>Math.abs(n)>=1000?(n/1000).toFixed(Math.abs(n)>=10000?0:1)+'k':String(Math.round(n));
   let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Net domestic moves by year. Exact values are in the table below.">`;
   for(const v of [...new Set([lo,0,hi])])svg+=`<line class="${v===0?'zero':'grid'}" x1="${left}" x2="${W-right}" y1="${y(v)}" y2="${y(v)}"/><text x="${left-8}" y="${y(v)+3}" text-anchor="end">${compact(v)}</text>`;
-  svg+=values.map((v,i)=>{const x=left+step*i+step*.2,width=step*.6;return `<rect ${interactive?`data-year="${years[i]}" style="cursor:pointer"`:''} x="${x}" y="${Math.min(y(0),y(v))}" width="${width}" height="${Math.max(1,Math.abs(y(v)-y(0)))}" rx="2" fill="${v>=0?'#529a85':'#ce957b'}" ${years[i]===selectedYear?'stroke="#19343c" stroke-width="1.5"':''}><title>${years[i]}: ${signed(v)} net moves</title></rect>${i===0||i===values.length-1||i%5===4?`<text x="${x+width/2}" y="${H-6}" text-anchor="middle">${years[i]}</text>`:''}`;}).join('');
+  svg+=values.map((v,i)=>{const x=left+step*i+step*.2,width=step*.6;return `<rect ${interactive?`data-year="${years[i]}" style="cursor:pointer"`:''} x="${x}" y="${Math.min(y(0),y(v))}" width="${width}" height="${Math.max(1,Math.abs(y(v)-y(0)))}" rx="2" fill="${v>=0?'#3489bf':'#cb8b75'}" ${years[i]===selectedYear?'stroke="#002e2e" stroke-width="1.5"':''}><title>${years[i]}: ${signed(v)} net moves</title></rect>${i===0||i===values.length-1||i%5===4?`<text x="${x+width/2}" y="${H-6}" text-anchor="middle">${years[i]}</text>`:''}`;}).join('');
   return svg+'</svg>';
 }
 function renderDetails() {
@@ -127,7 +139,7 @@ function renderDetails() {
   $('trendTable').innerHTML='<table><thead><tr><th>Year</th><th>Arrivals</th><th>Departures</th><th>Net</th></tr></thead><tbody>'+years.map(y=>{const r=getSummary(y)[selected];return `<tr><th scope="row">${y}</th><td>${fmt(r[0])}</td><td>${fmt(r[1])}</td><td>${signed(r[0]-r[1])}</td></tr>`;}).join('')+'</tbody></table>';
   $('ageTitle').textContent='Who arrives. Who leaves.';$('ageYear').textContent=state.year;
   const vals=manifest.ages.map((_,i)=>{const r=getSummary(state.year,i+1)[selected];return r[0]-r[1];}),max=Math.max(...vals.map(Math.abs),1);
-  $('ageChart').innerHTML=vals.map((v,i)=>{const width=Math.abs(v)/max*48;return `<button class="age-row" data-age="${i+1}" aria-pressed="${state.age===i+1}" aria-label="Explore ages ${esc(manifest.ages[i])}: ${signed(v)} net moves"><span class="age-label">${manifest.ages[i].replace('-','–')}</span><span class="age-track"><i class="age-fill" style="left:${v<0?50-width:50}%;width:${width}%;background:${v>=0?'#529a85':'#ce957b'}"></i></span><span class="age-value ${v>=0?'positive':'negative'}">${signed(v)}</span></button>`;}).join('');
+  $('ageChart').innerHTML=vals.map((v,i)=>{const width=Math.abs(v)/max*48;return `<button class="age-row" data-age="${i+1}" aria-pressed="${state.age===i+1}" aria-label="Explore ages ${esc(manifest.ages[i])}: ${signed(v)} net moves"><span class="age-label">${manifest.ages[i].replace('-','–')}</span><span class="age-track"><i class="age-fill" style="left:${v<0?50-width:50}%;width:${width}%;background:${v>=0?'#3489bf':'#cb8b75'}"></i></span><span class="age-value ${v>=0?'positive':'negative'}">${signed(v)}</span></button>`;}).join('');
   $('ageText').innerHTML=`In ${state.year}, ${esc(name(selected))} had <strong>${signed(vals[1])} net moves at ages 18–24</strong> and <strong>${signed(vals[3])} at ages 30–39</strong> (${sexName()}). These are different age groups, not the same people followed through life.`;
 }
 async function openRoute(other) {
