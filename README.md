@@ -89,7 +89,7 @@ The existing Sites publication remains available separately. GitHub Pages public
 
 `dist/` is a portable static site. It can be hosted as static files, including on GitHub Pages or Cloudflare Pages, without an application backend. There is no runtime StatBank dependency and no user account or API key needed by the app itself. Hosting access controls may require sign-in.
 
-The initial request loads metadata, the municipality history summaries and one year’s flow network. Other years load on demand. Route histories are stored per origin, so inspecting a connection fetches only the two relevant files. All files are below 1 MB; the complete snapshot is approximately 22 MB before HTTP compression. NetworkX runs during the build, not in the browser. Google Fonts is optional; system fonts are the fallback.
+The initial request loads metadata, the municipality history summaries and one year’s flow network. Other years load on demand. Route histories are stored per origin, so inspecting a connection fetches only the two relevant files. All files are below 1 MB; the complete snapshot is approximately 22 MB before HTTP compression. NetworkX runs during the build, not in the browser. Typography uses locally hosted D-DIN fonts with system-font fallbacks; no external font service is required.
 
 The Sites identity is retained in `.openai/hosting.json`. Publish the exact checked source and `dist/` artifact through the Sites workflow. The new Site is private; the source checkout does not alter its audience.
 
@@ -106,6 +106,8 @@ The Sites identity is retained in `.openai/hosting.json`. Publish the exact chec
 - A group’s internal share is moves originating in that group and ending in it, divided by all moves originating in that group. National internal share is stored separately.
 
 ## Sources and licences
+
+The interface uses a Statistics Denmark-inspired blue and teal palette with the open [D-DIN typeface](https://github.com/amcchord/datto-d-din). D-DIN is distributed under the SIL Open Font License; copyright and licence notices are included in `dist/fonts/`. The project has its own branding and remains independent of Statistics Denmark.
 
 Statistical data: **© Statistics Denmark, CC BY 4.0**.
 

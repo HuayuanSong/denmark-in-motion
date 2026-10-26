@@ -16,9 +16,14 @@ errors=[]
 def ready(page):page.locator('#loading').wait_for(state='hidden')
 def select(page,key,value):page.locator('#'+key).select_option(str(value));ready(page)
 def check_stats(page,area,year,age,sex):
- r=summary[str(year)][sex][age][idx[area]]
- vals=page.locator('#insight .stat strong').all_text_contents()
- assert vals[:2]==[f'{r[0]:,}',f'{r[1]:,}'],(vals,r)
+ rows=summary[str(year)][sex][age]
+ r=rows[idx[area]]
+ net=r[0]-r[1]
+ signed_net=('+' if net>0 else '−' if net<0 else '')+f'{abs(net):,}'
+ expect(page.locator('#keyArrivals')).to_have_text(f'{r[0]:,}')
+ expect(page.locator('#keyDepartures')).to_have_text(f'{r[1]:,}')
+ expect(page.locator('#keyNet')).to_have_text(signed_net)
+ expect(page.locator('#nationalMoves')).to_have_text(f'{sum(row[0] for row in rows):,}')
 
 def download(page):
  with page.expect_download() as result:page.locator('#downloadBtn').click()
