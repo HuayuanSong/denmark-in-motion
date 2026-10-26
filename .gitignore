@@ -1,0 +1,8 @@
+.venv/
+.cache/
+__pycache__/
+test-results/
+.DS_Store
+*.tar.gz
+.openai/local*
+.openai/source-workflow*

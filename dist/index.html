@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f7f8f4">
+<meta name="description" content="Follow twenty years of moves across Denmark. Explore the connections, age patterns and domestic migration balance of every municipality, with open Statistics Denmark data.">
+<title>Denmark in Motion — Where Denmark moves</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#explorer">Skip to the map</a>
+<header class="site-header wrap">
+<a class="brand" href="./" aria-label="Denmark in Motion home"><svg viewBox="0 0 38 38" aria-hidden="true"><path d="M3 28C12 28 14 10 23 10H34M3 18C13 18 15 29 25 29H34M23 5l6 5-6 5"/></svg><span>Denmark<span class="brand-sub">in motion</span></span></a>
+<nav aria-label="Page"><span class="header-note">A country, seen through its moves.</span><button id="aboutBtn" class="text-btn">About the data <span aria-hidden="true">↗</span></button></nav>
+</header>
+<main class="wrap">
+<section class="hero"><p class="eyebrow">THE MOVEMENT ATLAS <span>2006—2025</span></p><h1>Where Denmark <em>moves.</em></h1><div class="hero-bottom"><p>From one municipality to another, a different picture of Denmark emerges.<br class="desktop"> Follow the flows. Find the connections. See what changes with age.</p><span class="source-badge"><i></i> Real data. Every municipality.</span></div></section>
+<section id="explorer" class="explorer" aria-label="Migration explorer">
+<div class="tabs" role="tablist" aria-label="Questions to explore">
+<button role="tab" aria-selected="true" id="tab-flows" data-view="flows"><span>01</span> Where do movers go?</button>
+<button role="tab" aria-selected="false" id="tab-balance" data-view="balance" tabindex="-1"><span>02</span> Who gains & loses?</button>
+<button role="tab" aria-selected="false" id="tab-groups" data-view="groups" tabindex="-1"><span>03</span> Which places connect?</button>
+</div>
+<div class="filters">
+<label class="area-filter">MUNICIPALITY<select id="area" aria-label="Municipality"></select></label>
+<label>YEAR<select id="year" aria-label="Year"></select></label>
+<label>AGE AT MOVE<select id="age" aria-label="Age at move"><option value="0">All ages</option></select></label>
+<label>SEX<select id="sex" aria-label="Recorded sex"><option value="0">Everyone</option><option value="1">Men</option><option value="2">Women</option></select></label>
+<button id="shareBtn" class="icon-btn" aria-label="Copy link to this view" title="Copy link to this view">↗</button>
+</div>
+<div class="explorer-body" role="tabpanel" aria-labelledby="tab-flows" id="panel">
+<div class="map-panel">
+<div class="map-top"><div><p class="eyebrow" id="mapKicker">MOVES BETWEEN MUNICIPALITIES</p><h2 id="mapHeading">Loading Denmark…</h2></div><div class="segmented" id="mapSwitch"></div></div>
+<div class="map-stage" id="mapStage"><svg id="map" viewBox="0 0 900 720" role="img" aria-label="Map of Danish municipalities"><defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#427c91"/></marker></defs><g id="mapContent"><g id="land"></g><g id="routes"></g><g id="points"></g></g></svg><div id="mapTip" class="map-tip" hidden></div><div class="zoom-controls"><button id="zoomBtn" aria-label="Zoom to selected municipality" title="Zoom to selected municipality">＋</button><button id="resetZoom" aria-label="Show all Denmark" title="Show all Denmark">⌂</button></div><div id="loading" class="loading" role="status">Loading the atlas…</div></div>
+<div class="map-bottom"><div id="legend" class="legend"></div><span class="map-hint">Select a place on the map to explore it</span></div>
+<p class="map-credit">© EuroGeographics for the administrative boundaries · GISCO 2024</p>
+</div>
+<aside id="insight" class="insight" aria-live="polite" aria-atomic="true"></aside>
+</div>
+<div class="timeline"><span>TRAVEL THROUGH TIME</span><label class="sr-only" for="yearRange">Year</label><span class="timeline-start">2006</span><input id="yearRange" type="range" min="2006" max="2025" value="2025" step="1"><strong id="rangeValue">2025</strong><button id="downloadBtn" class="text-btn">Download this view ↓</button></div>
+</section>
+<section class="questions" aria-label="Suggested questions"><span>START WITH A QUESTION</span><button data-preset="young">Where do young adults arrive? <b>↗</b></button><button data-preset="thirties">What changes in your thirties? <b>↗</b></button><button data-preset="gains">Who gains beyond the big cities? <b>↗</b></button></section>
+<section class="detail-grid" aria-label="The longer story">
+<article class="detail-card"><p class="eyebrow">THE LONG VIEW</p><div class="card-heading"><h2 id="trendTitle">Twenty years of change</h2><span class="small-tag">NET DOMESTIC MOVES</span></div><p id="trendSubtitle" class="muted"></p><div id="trendChart" class="chart"></div><p id="trendText" class="chart-note"></p><details><summary>Read the year-by-year figures</summary><div id="trendTable" class="table-scroll"></div></details></article>
+<article class="detail-card"><p class="eyebrow">A DIFFERENT STORY AT EVERY AGE</p><div class="card-heading"><h2 id="ageTitle">The age pattern</h2><span class="small-tag" id="ageYear">2025</span></div><p class="muted">Arrivals minus departures, by age at the time of the move.</p><div id="ageChart" class="age-chart"></div><p id="ageText" class="chart-note"></p></article>
+</section>
+<section class="reading-note"><span class="note-symbol">↔</span><div><h3>Every move is a connection. It isn’t a whole life story.</h3><p>These are registered domestic moves between municipalities, not unique people. A person can move more than once. The data shows where and when moves happen, but cannot tell us why someone moved.</p></div><button id="methodBtn" class="text-btn">How to read this atlas ↗</button></section>
+</main>
+<footer class="wrap"><a class="footer-brand" href="./">Denmark in Motion</a><p>Statistics Denmark · <a href="https://www.statbank.dk/FLY66" target="_blank" rel="noopener">FLY66</a> & <a href="https://www.statbank.dk/FOLK1A" target="_blank" rel="noopener">FOLK1A</a><br><span id="freshness">Complete annual coverage, 2006–2025</span></p><button id="footerAbout" class="text-btn">Sources & methods ↗</button></footer>
+<dialog id="aboutDialog"><button class="close-btn" data-close aria-label="Close about the data">×</button><p class="eyebrow">SOURCES & METHODS</p><h2>A map you can check.</h2><p>This independent atlas uses Statistics Denmark’s open StatBank data. It is not an official Statistics Denmark product.</p><h3>What is counted?</h3><p><a href="https://www.statbank.dk/FLY66" target="_blank" rel="noopener">FLY66</a> records domestic moves from one municipality to another, by year, single year of age and recorded sex. We include all published years, 2006–2025, all 98 municipalities and Christiansø. Eight non-overlapping age bands cover ages 0–125. “Everyone” sums the source’s men and women categories.</p><p>A move is an event, not a unique person. Moves within a municipality, international migration, births and deaths are excluded. Net domestic moves therefore do not equal total population growth. The 2006 source figures were restated to the municipality structure introduced in 2007.</p><h3>What does “per 1,000” mean?</h3><p>Net moves divided by the population at 1 January of the same year, age group and sex, multiplied by 1,000. Population comes from <a href="https://www.statbank.dk/FOLK1A" target="_blank" rel="noopener">FOLK1A</a>, available here from 2008. Rates are unavailable for 2006–2007. This is not the probability that an individual moves; people age and can move repeatedly during a year. Small populations can produce large rates.</p><h3>How are connected groups found?</h3><p>For the selected year, age and sex, each municipality is a node. The weight between two places is the sum of moves in both directions. NetworkX’s Louvain algorithm groups places with relatively dense exchanges (resolution 1, fixed seed 42). These are exploratory groups, not official regions or commuting zones. Group membership can change with the filters; colours do not identify the same group across years.</p><h3>What is checked?</h3><p>Single-age records are grouped without overlap; missing values are rejected, and omitted BULK combinations count as zero under the source API’s documented rules. Every Copenhagen-origin route is independently checked against source-calculated all-age totals, for both sexes and every year. Arrivals and departures reconcile nationally; age-band population totals reconcile to the source totals. <a href="data/audit.json" target="_blank">Read the validation record ↗</a></p><h3>Sources, dates & reuse</h3><p id="sourceDates"></p><p>Statistical data: © Statistics Denmark, <a href="https://www.dst.dk/en/Statistik/hjaelp-til-statistikbanken/api" target="_blank" rel="noopener">CC BY 4.0</a>. Map: Eurostat GISCO LAU 2024, simplified for display. © EuroGeographics for the administrative boundaries. The geometry has <a href="https://ec.europa.eu/eurostat/en/web/gisco/geodata/statistical-units" target="_blank" rel="noopener">separate non-commercial use terms</a>. It is a fixed reference map, not a reconstruction of each year’s boundaries.</p><p>Age comparisons describe different groups in the same year. They do not follow a cohort or demonstrate causes such as housing prices, education or employment.</p></dialog>
+<dialog id="routeDialog" class="route-dialog"><button class="close-btn" data-close aria-label="Close route details">×</button><div id="routeBody"></div></dialog>
+<div id="toast" role="status" class="toast" hidden></div>
+<script type="module" src="app.js"></script>
+</body></html>

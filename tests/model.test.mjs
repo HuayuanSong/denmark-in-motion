@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {matrixFor,statsFor,netRate,partnersFor,routeSeries} from '../dist/model.mjs';
+const rows=[[0,1,0,3,5],[1,0,0,2,1],[0,2,1,7,4],[2,1,1,1,0]];
+const m=matrixFor(rows,3);
+assert.deepEqual(statsFor(m,0),{incoming:3,outgoing:19,net:-16});
+assert.equal([0,1,2].reduce((sum,i)=>sum+statsFor(m,i).net,0),0);
+assert.deepEqual(partnersFor(m,0,'out'),[{i:2,count:11},{i:1,count:8}]);
+assert.deepEqual(partnersFor(m,0,'in'),[{i:1,count:3}]);
+assert.deepEqual(statsFor(matrixFor(rows,3,1,2),0),{incoming:1,outgoing:5,net:-4});
+assert.equal(netRate(20,10,200),50);
+assert.equal(netRate(20,10,null),null);
+assert.equal(netRate(0,0,0),null);
+assert.deepEqual(routeSeries([[2006,1,0,3,2],[2006,1,1,4,6],[2008,1,0,1,7]],1,[2006,2007,2008],0,0),[15,0,8]);
+assert.deepEqual(routeSeries([[2006,1,0,3,2],[2006,1,1,4,6]],1,[2006,2007],1,1),[3,0]);
+console.log('PASS: flow direction, filters, net balance, denominators and route history.');
