@@ -4,7 +4,10 @@ The deployment branch contains only the website. Its commits advance normally;
 existing history is retained, and concurrent updates are never force-pushed.
 """
 import argparse
+from pathlib import Path
 import subprocess
+
+from version_assets import versioned_html
 
 
 def git(*args, capture=True):
@@ -21,6 +24,9 @@ def main():
     git('remote', 'get-url', args.remote)
     if git('status', '--porcelain', '--', 'dist'):
         parser.error('Commit the changes under dist/ before publishing.')
+    dist = Path(git('rev-parse', '--show-toplevel')) / 'dist'
+    if (dist / 'index.html').read_text() != versioned_html(dist):
+        parser.error('Run python3 scripts/version_assets.py, then commit and push dist/index.html before publishing.')
     for filename in ['index.html', '.nojekyll']:
         git('cat-file', '-e', 'HEAD:dist/' + filename)
     source = git('rev-parse', 'HEAD')

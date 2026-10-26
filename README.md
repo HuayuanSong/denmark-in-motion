@@ -68,6 +68,14 @@ The shipped-snapshot check independently recomputes all 540 filtered networks, a
 
 The public GitHub Pages site serves the `gh-pages` branch. Source code, import scripts and tests live on `main`; the deployment branch contains only the committed `dist/` snapshot. GitHub’s built-in Pages deployment publishes that branch automatically, without a custom Actions workflow, API key or repository secret.
 
+Before committing website changes, update the content-based asset versions:
+
+```sh
+python3 scripts/version_assets.py
+```
+
+Include the updated `dist/index.html` in the commit. This gives changed styles, scripts and the icon new URLs so returning visitors do not reuse cached assets from an older design. The publisher checks that these versions are current.
+
 After committing and pushing source changes to `main`, publish the updated website with:
 
 ```sh
