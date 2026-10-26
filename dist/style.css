@@ -7,3 +7,14 @@
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 [hidden]{display:none!important}.all-connections{margin-top:13px}.all-connections>div{max-height:290px;overflow:auto;margin-top:9px}
 @media(max-width:800px){.reading-note{display:grid;grid-template-columns:32px minmax(0,1fr);gap:12px}.reading-note .note-symbol{grid-column:1}.reading-note div{grid-column:2}.reading-note button{grid-column:2;margin:3px 0 0;min-width:0;justify-self:start;text-align:left}.all-connections .rank-list{display:block}}
+/* Keep the map under the pointer and the symbols readable at every zoom. */
+#map{touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;overflow:hidden}
+#map:focus-visible{outline:2px solid #cf9750;outline-offset:-3px}
+#map.is-dragging,#map.is-dragging .municipality{cursor:grabbing}
+.map-label{font-size:calc(12px / var(--map-scale,1));stroke-width:calc(4px / var(--map-scale,1))}
+.selected-label{font-size:calc(13px / var(--map-scale,1))}
+.route-line,#points circle{vector-effect:non-scaling-stroke}
+.zoom-controls button{width:36px;height:36px}
+.zoom-controls button:disabled:hover{color:inherit}
+.zoom-level{position:absolute;bottom:17px;left:69px;background:#ffffffd9;border:1px solid var(--line);border-radius:4px;padding:4px 7px;color:var(--muted);font-size:10px;font-variant-numeric:tabular-nums;pointer-events:none}
+@media(max-width:800px){.map-bottom{flex-wrap:wrap}.map-hint{display:block;font-size:9px}.zoom-controls button{width:40px;height:40px}.zoom-level{left:73px}}

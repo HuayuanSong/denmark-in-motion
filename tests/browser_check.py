@@ -84,8 +84,8 @@ with sync_playwright() as p:
  expect(page.locator('#tab-flows')).to_have_attribute('aria-selected','true')
  page.locator('.municipality[data-i="'+str(idx['851'])+'"]').dispatch_event('click');ready(page)
  assert page.locator('#area').input_value()=='851'
- page.locator('#zoomBtn').click();assert page.locator('#map').get_attribute('viewBox')!='0 0 900 720'
- page.locator('#resetZoom').click();assert page.locator('#map').get_attribute('viewBox')=='0 0 900 720'
+ page.locator('#zoomBtn').click();page.wait_for_function('Number(document.querySelector("#map").dataset.zoom)>1.4')
+ page.locator('#resetZoom').click();page.wait_for_function('document.querySelector("#mapContent").getAttribute("transform")==="translate(0 0) scale(1)"')
  # Narrative presets are live queries, not disconnected text.
  page.locator('[data-preset="young"]').click();ready(page);check_stats(page,'751',2025,2,0)
  page.locator('[data-preset="thirties"]').click();ready(page);check_stats(page,'101',2025,4,0)

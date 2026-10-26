@@ -1,4 +1,5 @@
 import {matrixFor,statsFor,netRate,partnersFor,routeSeries} from './model.mjs';
+import {createMapNavigation} from './map-navigation.mjs';
 const $ = id => document.getElementById(id);
 const fmt = n => new Intl.NumberFormat('en-GB').format(Math.round(n));
 const signed = n => (n > 0 ? '+' : n < 0 ? '−' : '') + fmt(Math.abs(n));
@@ -7,7 +8,7 @@ const pct = (part,whole) => whole ? (100*part/whole).toFixed(1)+'%' : '0%';
 const esc = value => String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const palette = ['#539883','#b78b59','#6f8fb3','#b97c87','#8c86ab','#89a454','#c29568','#599f9f','#a28e72','#9f9fb8'];
 const state = {area:'751',year:2025,age:0,sex:0,view:'flows',direction:'out',unit:'count'};
-let manifest, history, current, matrix, selected=0, renderId=0, zoomed=false, routeRenderId=0;
+let manifest, history, current, matrix, selected=0, renderId=0, mapNavigation, routeRenderId=0;
 const yearCache = new Map(), routeCache = new Map();
 const name = i => manifest.areas[i].english;
 const ageName = () => state.age ? 'ages '+manifest.ages[state.age-1].replace('-', '–') : 'all ages';
@@ -80,13 +81,12 @@ function renderMap() {
   const labels=[selected];
   const candidates=state.view==='flows'?partners.slice(0,8).map(p=>p.i):['751','851','461','561','400'].map(code=>manifest.areas.findIndex(a=>a.code===code));
   for(const i of candidates)if(i>=0&&!labels.includes(i)&&labels.every(j=>Math.hypot(manifest.areas[i].x-manifest.areas[j].x,manifest.areas[i].y-manifest.areas[j].y)>70))labels.push(i);
-  $('points').innerHTML=labels.map(i=>{const a=manifest.areas[i],chosen=i===selected;return `<circle cx="${a.x}" cy="${a.y}" r="${chosen?5:3}" fill="${chosen?'#19343c':'#427c91'}" stroke="#fff" stroke-width="1.6" pointer-events="none"/><text x="${a.x}" y="${a.y-11}" text-anchor="middle" class="map-label ${chosen?'selected-label':''}">${esc(name(i))}</text>`;}).join('');
+  $('points').innerHTML=labels.map(i=>{const a=manifest.areas[i],chosen=i===selected;return `<circle cx="${a.x}" cy="${a.y}" data-radius="${chosen?5:3}" r="${chosen?5:3}" fill="${chosen?'#19343c':'#427c91'}" stroke="#fff" stroke-width="1.6" pointer-events="none"/><text x="${a.x}" y="${a.y-11}" data-anchor-y="${a.y}" text-anchor="middle" class="map-label ${chosen?'selected-label':''}">${esc(name(i))}</text>`;}).join('');
   if(state.view==='flows')$('legend').innerHTML='<span><i style="background:#1e655a"></i>Selected place</span><span><i style="background:#427c91"></i>Top 8 flows · thicker = more moves</span>';
   else if(state.view==='balance')$('legend').innerHTML='<span><i style="background:#bf7256"></i>Net loss</span><span><i style="background:#e4e8df"></i>Balanced</span><span><i style="background:#287e6c"></i>Net gain</span>';
   else $('legend').innerHTML='<span>Same colour = more closely connected through moves</span>';
-  applyZoom();
+  mapNavigation?.refresh();
 }
-function applyZoom(){const a=manifest.areas[selected];$('map').setAttribute('viewBox',zoomed?`${a.x-145} ${a.y-116} 290 232`:'0 0 900 720');$('zoomBtn').setAttribute('aria-pressed',String(zoomed));}
 function statsMarkup(row) { const net=row[0]-row[1];return `<div class="stats"><div class="stat"><span>ARRIVALS</span><strong>${fmt(row[0])}</strong></div><div class="stat"><span>DEPARTURES</span><strong>${fmt(row[1])}</strong></div><div class="stat net"><span>NET DOMESTIC MOVES</span><strong class="${net>=0?'positive':'negative'}">${signed(net)}</strong></div></div>`; }
 function ranking(rows,kind='route',limit=6) {
   const max=Math.max(...rows.map(r=>Math.abs(r.count)),1);
@@ -164,16 +164,27 @@ function attachEvents() {
   $('yearRange').addEventListener('change',e=>{state.year=Number(e.target.value);render();});
   document.querySelectorAll('[data-view]').forEach(button=>{button.onclick=()=>{state.view=button.dataset.view;render();};button.onkeydown=e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const buttons=[...document.querySelectorAll('[data-view]')],i=buttons.indexOf(button),next=e.key==='Home'?0:e.key==='End'?2:(i+(e.key==='ArrowRight'?1:2))%3;buttons[next].focus();buttons[next].click();};});
   $('mapSwitch').onclick=e=>{const b=e.target.closest('button');if(!b||b.disabled)return;if(b.dataset.direction)state.direction=b.dataset.direction;if(b.dataset.unit)state.unit=b.dataset.unit;render();};
-  $('land').onclick=e=>{const p=e.target.closest('[data-i]');if(p)chooseArea(Number(p.dataset.i));};
-  $('mapStage').addEventListener('pointermove',e=>{const p=e.target.closest('[data-i]');if(!p){$('mapTip').hidden=true;return;}const i=Number(p.dataset.i),r=getSummary()[i];let description=state.view==='flows'?`${fmt(state.direction==='out'?matrix[selected][i]:matrix[i][selected])} ${state.direction==='out'?'from':'to'} ${name(selected)}`:state.view==='balance'?`${metric(r)===null?'Unavailable':state.unit==='rate'?decimal(metric(r)):signed(metric(r))} ${state.unit==='rate'?'per 1,000':'net moves'}`:`${fmt(r[0])} arrivals · ${fmt(r[1])} departures`;
+  $('land').onclick=e=>{const p=e.target.closest('[data-i]');if(p&&Number(p.dataset.i)!==selected)chooseArea(Number(p.dataset.i));};
+  $('mapStage').addEventListener('pointermove',e=>{if(mapNavigation?.interacting||e.pointerType==='touch'){$('mapTip').hidden=true;return;}const p=e.target.closest('[data-i]');if(!p){$('mapTip').hidden=true;return;}const i=Number(p.dataset.i),r=getSummary()[i];let description=state.view==='flows'?`${fmt(state.direction==='out'?matrix[selected][i]:matrix[i][selected])} ${state.direction==='out'?'from':'to'} ${name(selected)}`:state.view==='balance'?`${metric(r)===null?'Unavailable':state.unit==='rate'?decimal(metric(r)):signed(metric(r))} ${state.unit==='rate'?'per 1,000':'net moves'}`:`${fmt(r[0])} arrivals · ${fmt(r[1])} departures`;
     if(i===selected&&state.view==='flows')description='Selected municipality';
     const rect=$('mapStage').getBoundingClientRect();$('mapTip').innerHTML=`<strong>${esc(name(i))}</strong>${esc(description)}`;$('mapTip').hidden=false;$('mapTip').style.left=Math.max(5,Math.min(e.clientX-rect.left+12,rect.width-225))+'px';$('mapTip').style.top=Math.max(4,e.clientY-rect.top-57)+'px';});
   $('mapStage').addEventListener('pointerleave',()=>$('mapTip').hidden=true);
-  $('zoomBtn').onclick=()=>{zoomed=!zoomed;applyZoom();};$('resetZoom').onclick=()=>{zoomed=false;applyZoom();};
+  mapNavigation=createMapNavigation($('map'),$('mapContent'),{onChange:({k,scale})=>{
+    $('mapTip').hidden=true;
+    $('zoomBtn').disabled=k>=31.999;
+    $('zoomOutBtn').disabled=k<=1.0001;
+    $('zoomLevel').textContent=k.toFixed(1)+'×';
+    $('points').querySelectorAll('circle').forEach(p=>p.setAttribute('r',p.dataset.radius/scale));
+    $('points').querySelectorAll('text').forEach(p=>p.setAttribute('y',Number(p.dataset.anchorY)-11/scale));
+  }});
+  $('zoomBtn').onclick=()=>mapNavigation.zoom(1.5);
+  $('zoomOutBtn').onclick=()=>mapNavigation.zoom(1/1.5);
+  $('focusMap').onclick=()=>mapNavigation.focus(manifest.areas[selected]);
+  $('resetZoom').onclick=()=>mapNavigation.reset();
   $('insight').onclick=e=>{const route=e.target.closest('[data-route]'),place=e.target.closest('[data-place]');if(route)openRoute(Number(route.dataset.route));if(place)chooseArea(Number(place.dataset.place));};
   $('ageChart').onclick=e=>{const b=e.target.closest('[data-age]');if(b){state.age=Number(b.dataset.age);render();}};
   $('trendChart').onclick=e=>{const b=e.target.closest('[data-year]');if(b){state.year=Number(b.dataset.year);render();}};
-  document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{state.year=manifest.years.at(-1);state.sex=0;state.unit='count';state.view='flows';state.direction='in';zoomed=false;if(b.dataset.preset==='young'){state.area='751';state.age=2;}if(b.dataset.preset==='thirties'){state.area='101';state.age=4;state.direction='out';}if(b.dataset.preset==='gains'){state.area='336';state.age=0;state.view='balance';state.unit='rate';}render();$('explorer').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});});
+  document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{state.year=manifest.years.at(-1);state.sex=0;state.unit='count';state.view='flows';state.direction='in';mapNavigation.reset();if(b.dataset.preset==='young'){state.area='751';state.age=2;}if(b.dataset.preset==='thirties'){state.area='101';state.age=4;state.direction='out';}if(b.dataset.preset==='gains'){state.area='336';state.age=0;state.view='balance';state.unit='rate';}render();$('explorer').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});});
   for(const id of ['aboutBtn','methodBtn','footerAbout'])$(id).onclick=()=>$('aboutDialog').showModal();
   document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>b.closest('dialog').close());
   document.querySelectorAll('dialog').forEach(d=>d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}}));

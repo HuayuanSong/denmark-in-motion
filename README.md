@@ -24,6 +24,12 @@ python3 -m http.server 4320 --bind 127.0.0.1 --directory dist
 
 Open `http://127.0.0.1:4320`.
 
+### Move around the map
+
+Drag with a mouse or one finger to pan. Scroll or pinch to zoom continuously around the pointer or the midpoint of the gesture; double-click to zoom in. The +/− buttons zoom in smaller increments, the target button centres the selected municipality, and the home button restores the whole country. The map keeps its position when the year, age, sex, direction or view changes.
+
+With the map focused, arrow keys pan, +/− zoom, and Home resets. Dragging does not select a municipality. Labels and point markers keep their size while zooming, and reduced-motion preferences disable the easing animation.
+
 ## Refresh the data
 
 Python 3.9+ is required for the data pipeline. The application itself has no Python dependency.
@@ -48,11 +54,12 @@ node tests/model.test.mjs
 .venv/bin/python tests/validate_snapshot.py
 # With the local server running and Python Playwright + Chromium installed:
 python3 tests/browser_check.py
+python3 tests/map_navigation_check.py
 ```
 
 The builder checks unique source rows, non-negative integer cells, no within-municipality moves, age coverage, population totals and all Copenhagen-origin routes against separately requested source-calculated CSV aggregates for every year and sex (3,960 checks).
 
-The shipped-snapshot check independently recomputes all 540 filtered networks, arrival/departure summaries, conservation of national flows, community totals and all 99 municipality route histories. Browser checks cover desktop/mobile, every control category, route history, URL restoration, CSV contents, population-rate availability, no-population groups and keyboard tab navigation. The browser script saves screenshots under ignored `test-results/`.
+The shipped-snapshot check independently recomputes all 540 filtered networks, arrival/departure summaries, conservation of national flows, community totals and all 99 municipality route histories. Browser checks cover desktop/mobile, every control category, route history, URL restoration, CSV contents, population-rate availability, no-population groups and keyboard tab navigation. The navigation checks exercise real mouse, wheel and multi-touch browser input, including cursor anchoring, pinch-to-pan transitions, cancelled gestures, bounds, keyboard controls and reduced motion. Browser scripts save screenshots under ignored `test-results/`.
 
 ## Architecture and hosting
 
